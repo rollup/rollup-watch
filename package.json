@@ -1,6 +1,6 @@
 {
   "name": "rollup-watch",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Watch files for changes and perform incremental rebuilds with Rollup",
   "main": "dist/rollup-watch.cjs.js",
   "scripts": {
@@ -29,10 +29,10 @@
     "eslint": "^2.11.1",
     "mocha": "^2.5.3",
     "rollup": "^0.28.0",
-    "rollup-plugin-buble": "^0.10.0"
+    "rollup-plugin-buble": "^0.10.0",
+    "rollup-plugin-json": "^2.0.0"
   },
   "dependencies": {
-    "chokidar": "^1.5.2",
-    "require-relative": "^0.8.7"
+    "chokidar": "^1.5.2"
   }
 }

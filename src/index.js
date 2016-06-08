@@ -1,76 +1,95 @@
+import EventEmitter from 'events';
 import * as chokidar from 'chokidar';
-import relative from 'require-relative';
 import { sequence } from './utils/promise.js';
+import { name, version } from '../package.json';
+import checkVersion from './utils/checkVersion.js';
 
-export default function watch ( options ) {
-	let rollup;
+export default function watch ( rollup, options ) {
+	const emitter = new EventEmitter();
 
-	try {
-		rollup = relative( 'rollup', process.cwd() );
-	} catch ( err ) {
-		// TODO handle gracefully
-		throw err;
-	}
+	process.nextTick( () => emitter.emit( 'event', { code: 'STARTING' }) );
 
-	let watchedIds;
-	let rebuildScheduled = false;
-	let building = false;
+	checkVersion( name, version )
+		.catch( err => {
+			if ( err.code === 'OUT_OF_DATE' ) {
+				// TODO offer to update
+				console.error( `rollup-watch is out of date (you have ${err.localVersion}, latest version is ${err.latestVersion}). Update it with npm install -g rollup-watch` );
+			}
+		})
+		.then( () => {
+			let watchedIds;
+			let rebuildScheduled = false;
+			let building = false;
 
-	let watcher;
+			let watcher;
 
-	function triggerRebuild () {
-		rebuildScheduled = true;
-		if ( !building ) build();
-	}
+			function triggerRebuild () {
+				rebuildScheduled = true;
+				if ( !building ) build();
+			}
 
-	function build () {
-		if ( building ) return;
+			function build () {
+				if ( building ) return;
 
-		rebuildScheduled = false;
-		building = true;
+				let start = Date.now();
+				let initial = !watcher;
 
-		return rollup.rollup( options )
-			.then( bundle => {
-				const moduleIds = bundle.modules.map( module => module.id );
+				emitter.emit( 'event', { code: 'BUILD_START' });
 
-				if ( !watcher ) {
-					watcher = chokidar.watch( moduleIds, {
-						persistent: true,
-						ignoreInitial: true
-					});
+				rebuildScheduled = false;
+				building = true;
 
-					watcher.on( 'change', triggerRebuild );
-					watcher.on( 'unlink', triggerRebuild );
+				return rollup.rollup( options )
+					.then( bundle => {
+						const moduleIds = bundle.modules.map( module => module.id );
 
-					watchedIds = moduleIds;
-				} else {
-					moduleIds.forEach( id => {
-						if ( !~watchedIds.indexOf( id ) ) {
-							watcher.add( id );
+						if ( !watcher ) {
+							watcher = chokidar.watch( moduleIds, {
+								persistent: true,
+								ignoreInitial: true
+							});
+
+							watcher.on( 'change', triggerRebuild );
+							watcher.on( 'unlink', triggerRebuild );
+
+							watchedIds = moduleIds;
+						} else {
+							moduleIds.forEach( id => {
+								if ( !~watchedIds.indexOf( id ) ) {
+									watcher.add( id );
+								}
+							});
+
+							watchedIds.forEach( id => {
+								if ( !~moduleIds.indexOf( id ) ) {
+									watcher.unwatch( id );
+								}
+							});
 						}
-					});
 
-					watchedIds.forEach( id => {
-						if ( !~moduleIds.indexOf( id ) ) {
-							watcher.unwatch( id );
+						if ( options.targets ) {
+							return sequence( options.targets, target => {
+								const mergedOptions = Object.assign( {}, options, target );
+								return bundle.write( mergedOptions );
+							});
 						}
+
+						return bundle.write( options );
+					})
+					.then( () => {
+						emitter.emit( 'event', {
+							code: 'BUILD_END',
+							duration: Date.now() - start,
+							initial
+						});
+
+						building = false;
+						if ( rebuildScheduled ) build();
 					});
-				}
+			}
 
-				if ( options.targets ) {
-					return sequence( options.targets, target => {
-						const mergedOptions = Object.assign( {}, options, target );
-						return bundle.write( mergedOptions );
-					});
-				}
+			build();
+		});
 
-				return bundle.write( options );
-			})
-			.then( () => {
-				building = false;
-				if ( rebuildScheduled ) build();
-			});
-	}
-
-	build();
+	return emitter;
 }
