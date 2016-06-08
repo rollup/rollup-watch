@@ -1,0 +1,38 @@
+{
+  "name": "rollup-watch",
+  "version": "1.0.0",
+  "description": "Watch files for changes and perform incremental rebuilds with Rollup",
+  "main": "dist/rollup-watch.cjs.js",
+  "scripts": {
+    "test": "mocha",
+    "pretest": "npm run build",
+    "build": "rollup -c",
+    "prepublish": "npm run lint && npm test",
+    "lint": "eslint src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rollup/rollup-watch.git"
+  },
+  "keywords": [
+    "rollup",
+    "modules",
+    "bundling"
+  ],
+  "author": "Rich Harris",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rollup/rollup-watch/issues"
+  },
+  "homepage": "https://github.com/rollup/rollup-watch#readme",
+  "devDependencies": {
+    "eslint": "^2.11.1",
+    "mocha": "^2.5.3",
+    "rollup": "^0.28.0",
+    "rollup-plugin-buble": "^0.10.0"
+  },
+  "dependencies": {
+    "chokidar": "^1.5.2",
+    "require-relative": "^0.8.7"
+  }
+}
