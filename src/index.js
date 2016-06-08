@@ -6,7 +6,7 @@ import checkVersion from './utils/checkVersion.js';
 
 class FileWatcher {
 	constructor ( file, data, callback ) {
-		fs.watch( file, { encoding: 'utf-8', persistent: true }, event => {
+		fs.watch( file, { encoding: 'utf-8', persistent: true }, () => {
 			// this is necessary because we get duplicate events...
 			const contents = fs.readFileSync( file, 'utf-8' );
 			if ( contents !== data ) {
@@ -32,14 +32,13 @@ export default function watch ( rollup, options ) {
 		.then( () => {
 			let filewatchers = new Map();
 
-			let watchedIds;
 			let rebuildScheduled = false;
 			let building = false;
 			let watching = false;
 
 			let timeout;
 
-			function triggerRebuild ( event, filename ) {
+			function triggerRebuild () {
 				clearTimeout( timeout );
 				rebuildScheduled = true;
 
