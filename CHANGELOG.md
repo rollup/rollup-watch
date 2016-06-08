@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 2.1.1
+
+* Fix `pkg.files`
+
 ## 2.1.0
 
 * Experiment with using native `fs.watch`
