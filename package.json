@@ -3,6 +3,10 @@
   "version": "2.1.0",
   "description": "Watch files for changes and perform incremental rebuilds with Rollup",
   "main": "dist/rollup-watch.cjs.js",
+  "jsnext:main": "dist/rollup-watch.es6.js",
+  "files": [
+    "src", "dist", "README.md"
+  ],
   "scripts": {
     "test": "mocha",
     "pretest": "npm run build",
