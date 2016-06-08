@@ -13,7 +13,7 @@ export default function watch ( rollup, options ) {
 		.catch( err => {
 			if ( err.code === 'OUT_OF_DATE' ) {
 				// TODO offer to update
-				console.error( `rollup-watch is out of date (you have ${err.localVersion}, latest version is ${err.latestVersion}). Update it with npm install -g rollup-watch` );
+				console.error( `rollup-watch is out of date (you have ${err.localVersion}, latest version is ${err.latestVersion}). Update it with npm install -g rollup-watch` ); // eslint-disable-line no-console
 			}
 		})
 		.then( () => {
