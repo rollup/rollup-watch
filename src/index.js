@@ -1,8 +1,21 @@
 import EventEmitter from 'events';
-import * as chokidar from 'chokidar';
+import * as fs from 'fs';
 import { sequence } from './utils/promise.js';
 import { name, version } from '../package.json';
 import checkVersion from './utils/checkVersion.js';
+
+class FileWatcher {
+	constructor ( file, data, callback ) {
+		fs.watch( file, { encoding: 'utf-8', persistent: true }, event => {
+			// this is necessary because we get duplicate events...
+			const contents = fs.readFileSync( file, 'utf-8' );
+			if ( contents !== data ) {
+				data = contents;
+				callback();
+			}
+		});
+	}
+}
 
 export default function watch ( rollup, options ) {
 	const emitter = new EventEmitter();
@@ -17,55 +30,47 @@ export default function watch ( rollup, options ) {
 			}
 		})
 		.then( () => {
+			let filewatchers = new Map();
+
 			let watchedIds;
 			let rebuildScheduled = false;
 			let building = false;
+			let watching = false;
 
-			let watcher;
+			let timeout;
 
-			function triggerRebuild () {
+			function triggerRebuild ( event, filename ) {
+				clearTimeout( timeout );
 				rebuildScheduled = true;
-				if ( !building ) build();
+
+				timeout = setTimeout( () => {
+					if ( !building ) {
+						rebuildScheduled = false;
+						build();
+					}
+				}, 50 );
 			}
 
 			function build () {
 				if ( building ) return;
 
 				let start = Date.now();
-				let initial = !watcher;
+				let initial = !watching;
 
 				emitter.emit( 'event', { code: 'BUILD_START' });
 
-				rebuildScheduled = false;
 				building = true;
 
 				return rollup.rollup( options )
 					.then( bundle => {
-						const moduleIds = bundle.modules.map( module => module.id );
+						bundle.modules.forEach( module => {
+							const id = module.id;
 
-						if ( !watcher ) {
-							watcher = chokidar.watch( moduleIds, {
-								persistent: true,
-								ignoreInitial: true
-							});
-
-							watcher.on( 'change', triggerRebuild );
-							watcher.on( 'unlink', triggerRebuild );
-
-							watchedIds = moduleIds;
-						} else {
-							moduleIds.forEach( id => {
-								if ( !~watchedIds.indexOf( id ) ) {
-									watcher.add( id );
-								}
-							});
-
-							watchedIds.forEach( id => {
-								if ( !~moduleIds.indexOf( id ) ) {
-									watcher.unwatch( id );
-								}
-							});
-						}
+							if ( !filewatchers.has( id ) ) {
+								const watcher = new FileWatcher( id, module.originalCode, triggerRebuild );
+								filewatchers.set( id, watcher );
+							}
+						});
 
 						if ( options.targets ) {
 							return sequence( options.targets, target => {

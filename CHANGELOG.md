@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 2.1.0
+
+* Experiment with using native `fs.watch`
+
 ## 2.0.0
 
 * CLI must pass `rollup` to `watch`

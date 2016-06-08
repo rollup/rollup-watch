@@ -1,6 +1,6 @@
 {
   "name": "rollup-watch",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Watch files for changes and perform incremental rebuilds with Rollup",
   "main": "dist/rollup-watch.cjs.js",
   "scripts": {
@@ -33,7 +33,6 @@
     "rollup-plugin-json": "^2.0.0"
   },
   "dependencies": {
-    "chokidar": "^1.5.2",
     "semver": "^5.1.0"
   }
 }
