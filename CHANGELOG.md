@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 2.2.0
+
+* Emit errors and recover ([#2](https://github.com/rollup/rollup-watch/issues/2))
+
 ## 2.1.1
 
 * Fix `pkg.files`
