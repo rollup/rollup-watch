@@ -5,13 +5,19 @@ import { name, version } from '../package.json';
 import checkVersion from './utils/checkVersion.js';
 
 class FileWatcher {
-	constructor ( file, data, callback ) {
-		fs.watch( file, { encoding: 'utf-8', persistent: true }, () => {
-			// this is necessary because we get duplicate events...
-			const contents = fs.readFileSync( file, 'utf-8' );
-			if ( contents !== data ) {
-				data = contents;
+	constructor ( file, data, callback, dispose ) {
+		const fsWatcher = fs.watch( file, { encoding: 'utf-8', persistent: true }, event => {
+			if ( event === 'rename' ) {
+				fsWatcher.close();
+				dispose();
 				callback();
+			} else {
+				// this is necessary because we get duplicate events...
+				const contents = fs.readFileSync( file, 'utf-8' );
+				if ( contents !== data ) {
+					data = contents;
+					callback();
+				}
 			}
 		});
 	}
@@ -66,7 +72,10 @@ export default function watch ( rollup, options ) {
 							const id = module.id;
 
 							if ( !filewatchers.has( id ) ) {
-								const watcher = new FileWatcher( id, module.originalCode, triggerRebuild );
+								const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
+									filewatchers.delete( id );
+								});
+
 								filewatchers.set( id, watcher );
 							}
 						});
