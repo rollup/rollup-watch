@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 2.4.0
+
+* Only watch files that exist (disregard plugin helper modules) ([#3](https://github.com/rollup/rollup-watch/issues/3))
+
 ## 2.3.0
 
 * Handle `rename` events ([#4](https://github.com/rollup/rollup-watch/issues/4))
