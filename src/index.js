@@ -4,22 +4,36 @@ import { sequence } from './utils/promise.js';
 import { name, version } from '../package.json';
 import checkVersion from './utils/checkVersion.js';
 
+const opts = { encoding: 'utf-8', persistent: true };
+
 class FileWatcher {
 	constructor ( file, data, callback, dispose ) {
-		const fsWatcher = fs.watch( file, { encoding: 'utf-8', persistent: true }, event => {
-			if ( event === 'rename' ) {
-				fsWatcher.close();
-				dispose();
-				callback();
-			} else {
-				// this is necessary because we get duplicate events...
-				const contents = fs.readFileSync( file, 'utf-8' );
-				if ( contents !== data ) {
-					data = contents;
+		try {
+			const fsWatcher = fs.watch( file, opts, event => {
+				if ( event === 'rename' ) {
+					fsWatcher.close();
+					dispose();
 					callback();
+				} else {
+					// this is necessary because we get duplicate events...
+					const contents = fs.readFileSync( file, 'utf-8' );
+					if ( contents !== data ) {
+						data = contents;
+						callback();
+					}
 				}
+			});
+
+			this.fileExists = true;
+		} catch ( err ) {
+			if ( err.code === 'ENOENT' ) {
+				// can't watch files that don't exist (e.g. injected
+				// by plugins somehow)
+				this.fileExists = false;
+			} else {
+				throw err;
 			}
-		});
+		}
 	}
 }
 
@@ -71,12 +85,15 @@ export default function watch ( rollup, options ) {
 						bundle.modules.forEach( module => {
 							const id = module.id;
 
+							// skip plugin helper modules
+							if ( /\0/.test( id ) ) return;
+
 							if ( !filewatchers.has( id ) ) {
 								const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
 									filewatchers.delete( id );
 								});
 
-								filewatchers.set( id, watcher );
+								if ( watcher.fileExists ) filewatchers.set( id, watcher );
 							}
 						});
 
