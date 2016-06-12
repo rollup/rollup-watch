@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 2.3.0
+
+* Handle `rename` events ([#4](https://github.com/rollup/rollup-watch/issues/4))
+
 ## 2.2.0
 
 * Emit errors and recover ([#2](https://github.com/rollup/rollup-watch/issues/2))
