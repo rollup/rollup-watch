@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 2.5.0
+
+* Use `cache` ([#8](https://github.com/rollup/rollup-watch/issues/8))
+
 ## 2.4.0
 
 * Only watch files that exist (disregard plugin helper modules) ([#3](https://github.com/rollup/rollup-watch/issues/3))
