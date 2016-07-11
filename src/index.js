@@ -1,6 +1,7 @@
 import EventEmitter from 'events';
 import * as fs from 'fs';
 import { sequence } from './utils/promise.js';
+import { assign } from './utils/object.js';
 import { name, version } from '../package.json';
 import checkVersion from './utils/checkVersion.js';
 
@@ -57,6 +58,7 @@ export default function watch ( rollup, options ) {
 			let watching = false;
 
 			let timeout;
+			let cache;
 
 			function triggerRebuild () {
 				clearTimeout( timeout );
@@ -75,13 +77,17 @@ export default function watch ( rollup, options ) {
 
 				let start = Date.now();
 				let initial = !watching;
+				let opts = assign( {}, options, cache ? { cache } : {});
 
 				emitter.emit( 'event', { code: 'BUILD_START' });
 
 				building = true;
 
-				return rollup.rollup( options )
+				return rollup.rollup( opts )
 					.then( bundle => {
+						// Save off bundle for re-use later
+						cache = bundle;
+
 						bundle.modules.forEach( module => {
 							const id = module.id;
 
