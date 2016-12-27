@@ -14,10 +14,7 @@
     "prepublish": "npm run lint && npm test",
     "lint": "eslint src"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rollup/rollup-watch.git"
-  },
+  "repository": "rollup/rollup-watch",
   "keywords": [
     "rollup",
     "modules",
