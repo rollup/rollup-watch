@@ -103,6 +103,9 @@ export default function watch ( rollup, options ) {
 							}
 						});
 
+						// Now we're watching
+						watching = true;
+
 						if ( options.targets ) {
 							return sequence( options.targets, target => {
 								const mergedOptions = Object.assign( {}, options, target );
