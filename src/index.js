@@ -1,7 +1,6 @@
 import EventEmitter from 'events';
 import * as fs from 'fs';
 import { sequence } from './utils/promise.js';
-import { assign } from './utils/object.js';
 import { name, version } from '../package.json';
 import checkVersion from './utils/checkVersion.js';
 
@@ -77,13 +76,13 @@ export default function watch ( rollup, options ) {
 
 				let start = Date.now();
 				let initial = !watching;
-				let opts = assign( options, cache ? { cache } : {});
+				if ( cache ) options.cache = cache;
 
 				emitter.emit( 'event', { code: 'BUILD_START' });
 
 				building = true;
 
-				return rollup.rollup( opts )
+				return rollup.rollup( options )
 					.then( bundle => {
 						// Save off bundle for re-use later
 						cache = bundle;
