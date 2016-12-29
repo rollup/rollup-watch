@@ -77,7 +77,7 @@ export default function watch ( rollup, options ) {
 
 				let start = Date.now();
 				let initial = !watching;
-				let opts = assign( {}, options, cache ? { cache } : {});
+				let opts = assign( options, cache ? { cache } : {});
 
 				emitter.emit( 'event', { code: 'BUILD_START' });
 
