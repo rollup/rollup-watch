@@ -1,8 +1,6 @@
 import EventEmitter from 'events';
 import * as fs from 'fs';
 import { sequence } from './utils/promise.js';
-import { name, version } from '../package.json';
-import checkVersion from './utils/checkVersion.js';
 
 const opts = { encoding: 'utf-8', persistent: true };
 
@@ -40,100 +38,89 @@ class FileWatcher {
 export default function watch ( rollup, options ) {
 	const emitter = new EventEmitter();
 
-	process.nextTick( () => emitter.emit( 'event', { code: 'STARTING' }) );
+	let filewatchers = new Map();
 
-	checkVersion( name, version )
-		.catch( err => {
-			if ( err.code === 'OUT_OF_DATE' ) {
-				// TODO offer to update
-				console.error( `rollup-watch is out of date (you have ${err.localVersion}, latest version is ${err.latestVersion}). Update it with npm install -g rollup-watch` ); // eslint-disable-line no-console
+	let rebuildScheduled = false;
+	let building = false;
+	let watching = false;
+
+	let timeout;
+	let cache;
+
+	function triggerRebuild () {
+		clearTimeout( timeout );
+		rebuildScheduled = true;
+
+		timeout = setTimeout( () => {
+			if ( !building ) {
+				rebuildScheduled = false;
+				build();
 			}
-		})
-		.then( () => {
-			let filewatchers = new Map();
+		}, 50 );
+	}
 
-			let rebuildScheduled = false;
-			let building = false;
-			let watching = false;
+	function build () {
+		if ( building ) return;
 
-			let timeout;
-			let cache;
+		let start = Date.now();
+		let initial = !watching;
+		if ( cache ) options.cache = cache;
 
-			function triggerRebuild () {
-				clearTimeout( timeout );
-				rebuildScheduled = true;
+		emitter.emit( 'event', { code: 'BUILD_START' });
 
-				timeout = setTimeout( () => {
-					if ( !building ) {
-						rebuildScheduled = false;
-						build();
+		building = true;
+
+		return rollup.rollup( options )
+			.then( bundle => {
+				// Save off bundle for re-use later
+				cache = bundle;
+
+				bundle.modules.forEach( module => {
+					const id = module.id;
+
+					// skip plugin helper modules
+					if ( /\0/.test( id ) ) return;
+
+					if ( !filewatchers.has( id ) ) {
+						const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
+							filewatchers.delete( id );
+						});
+
+						if ( watcher.fileExists ) filewatchers.set( id, watcher );
 					}
-				}, 50 );
-			}
+				});
 
-			function build () {
-				if ( building ) return;
+				// Now we're watching
+				watching = true;
 
-				let start = Date.now();
-				let initial = !watching;
-				if ( cache ) options.cache = cache;
-
-				emitter.emit( 'event', { code: 'BUILD_START' });
-
-				building = true;
-
-				return rollup.rollup( options )
-					.then( bundle => {
-						// Save off bundle for re-use later
-						cache = bundle;
-
-						bundle.modules.forEach( module => {
-							const id = module.id;
-
-							// skip plugin helper modules
-							if ( /\0/.test( id ) ) return;
-
-							if ( !filewatchers.has( id ) ) {
-								const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
-									filewatchers.delete( id );
-								});
-
-								if ( watcher.fileExists ) filewatchers.set( id, watcher );
-							}
-						});
-
-						// Now we're watching
-						watching = true;
-
-						if ( options.targets ) {
-							return sequence( options.targets, target => {
-								const mergedOptions = Object.assign( {}, options, target );
-								return bundle.write( mergedOptions );
-							});
-						}
-
-						return bundle.write( options );
-					})
-					.then( () => {
-						emitter.emit( 'event', {
-							code: 'BUILD_END',
-							duration: Date.now() - start,
-							initial
-						});
-					}, error => {
-						emitter.emit( 'event', {
-							code: 'ERROR',
-							error
-						});
-					})
-					.then( () => {
-						building = false;
-						if ( rebuildScheduled ) build();
+				if ( options.targets ) {
+					return sequence( options.targets, target => {
+						const mergedOptions = Object.assign( {}, options, target );
+						return bundle.write( mergedOptions );
 					});
-			}
+				}
 
-			build();
-		});
+				return bundle.write( options );
+			})
+			.then( () => {
+				emitter.emit( 'event', {
+					code: 'BUILD_END',
+					duration: Date.now() - start,
+					initial
+				});
+			}, error => {
+				emitter.emit( 'event', {
+					code: 'ERROR',
+					error
+				});
+			})
+			.then( () => {
+				building = false;
+				if ( rebuildScheduled ) build();
+			});
+	}
+
+	build();
 
 	return emitter;
 }
