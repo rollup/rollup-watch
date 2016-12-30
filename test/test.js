@@ -12,79 +12,114 @@ describe( 'rollup-watch', () => {
 		return require( resolved );
 	}
 
-	it( 'watches a file', done => {
-		sander.copydir( 'test/samples/basic' ).to( 'test/_tmp/input' ).then( () => {
+	function sequence ( watcher, events ) {
+		return new Promise( ( fulfil, reject ) => {
+			function go ( event ) {
+				const next = events.shift();
+
+				if ( !next ) {
+					fulfil();
+				}
+
+				else if ( typeof next === 'string' ) {
+					watcher.once( 'event', event => {
+						if ( event.code !== next ) {
+							reject( new Error( `Expected ${next} error, got ${event.code}` ) );
+						} else {
+							go( event );
+						}
+					});
+				}
+
+				else {
+					Promise.resolve( next( event ) ).then( go );
+				}
+			}
+
+			go();
+		});
+	}
+
+	it( 'watches a file', () => {
+		return sander.copydir( 'test/samples/basic' ).to( 'test/_tmp/input' ).then( () => {
 			const watcher = watch( rollup, {
 				entry: 'test/_tmp/input/main.js',
 				dest: 'test/_tmp/output/bundle.js',
 				format: 'cjs'
 			});
 
-			function waitFor ( code, cb ) {
-				watcher.once( 'event', event => {
-					if ( event.code !== code ) {
-						done( new Error( `Expected ${code} error, got ${event.code}` ) );
-					} else {
-						cb();
-					}
-				});
-			}
-
-			waitFor( 'BUILD_START', () => {
-				waitFor( 'BUILD_END', () => {
+			return sequence( watcher, [
+				'BUILD_START',
+				'BUILD_END',
+				() => {
 					assert.equal( run( './_tmp/output/bundle.js' ), 42 );
-
 					sander.writeFileSync( 'test/_tmp/input/main.js', 'export default 43;' );
-
-					waitFor( 'BUILD_START', () => {
-						waitFor( 'BUILD_END', () => {
-							assert.equal( run( './_tmp/output/bundle.js' ), 43 );
-							done();
-						});
-					});
-				});
-			});
+				},
+				'BUILD_START',
+				'BUILD_END',
+				() => {
+					assert.equal( run( './_tmp/output/bundle.js' ), 43 );
+				}
+			]);
 		});
 	});
 
-	it( 'recovers from an error', done => {
-		sander.copydir( 'test/samples/basic' ).to( 'test/_tmp/input' ).then( () => {
+	it( 'recovers from an error', () => {
+		return sander.copydir( 'test/samples/basic' ).to( 'test/_tmp/input' ).then( () => {
 			const watcher = watch( rollup, {
 				entry: 'test/_tmp/input/main.js',
 				dest: 'test/_tmp/output/bundle.js',
 				format: 'cjs'
 			});
 
-			function waitFor ( code, cb ) {
-				watcher.once( 'event', event => {
-					if ( event.code !== code ) {
-						done( new Error( `Expected ${code} error, got ${event.code}` ) );
-					} else {
-						cb();
-					}
-				});
-			}
-
-			waitFor( 'BUILD_START', () => {
-				waitFor( 'BUILD_END', () => {
+			return sequence( watcher, [
+				'BUILD_START',
+				'BUILD_END',
+				() => {
 					assert.equal( run( './_tmp/output/bundle.js' ), 42 );
-
 					sander.writeFileSync( 'test/_tmp/input/main.js', 'export nope;' );
+				},
+				'BUILD_START',
+				'ERROR',
+				() => {
+					sander.writeFileSync( 'test/_tmp/input/main.js', 'export default 43;' );
+				},
+				'BUILD_START',
+				'BUILD_END',
+				() => {
+					assert.equal( run( './_tmp/output/bundle.js' ), 43 );
+				}
+			]);
+		});
+	});
 
-					waitFor( 'BUILD_START', () => {
-						waitFor( 'ERROR', () => {
-							sander.writeFileSync( 'test/_tmp/input/main.js', 'export default 43;' );
-
-							waitFor( 'BUILD_START', () => {
-								waitFor( 'BUILD_END', () => {
-									assert.equal( run( './_tmp/output/bundle.js' ), 43 );
-									done();
-								});
-							});
-						});
-					});
-				});
+	it( 'refuses to watch the output file (#15)', () => {
+		return sander.copydir( 'test/samples/basic' ).to( 'test/_tmp/input' ).then( () => {
+			const watcher = watch( rollup, {
+				entry: 'test/_tmp/input/main.js',
+				dest: 'test/_tmp/output/bundle.js',
+				format: 'cjs'
 			});
+
+			return sequence( watcher, [
+				'BUILD_START',
+				'BUILD_END',
+				() => {
+					assert.equal( run( './_tmp/output/bundle.js' ), 42 );
+					sander.writeFileSync( 'test/_tmp/input/main.js', `import '../output/bundle.js'` );
+				},
+				'BUILD_START',
+				'ERROR',
+				event => {
+					assert.equal( event.error.message, 'Cannot import the generated bundle' );
+					sander.writeFileSync( 'test/_tmp/input/main.js', 'export default 43;' );
+				},
+				'BUILD_START',
+				'BUILD_END',
+				() => {
+					assert.equal( run( './_tmp/output/bundle.js' ), 43 );
+				}
+			]);
 		});
 	});
 });
