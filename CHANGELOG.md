@@ -1,5 +1,12 @@
 # rollup-watch changelog
 
+## 3.0.0
+
+* Don't check for version updates ([#12](https://github.com/rollup/rollup-watch/issues/12), [#26](https://github.com/rollup/rollup-watch/issues/26), [#34](https://github.com/rollup/rollup-watch/issues/34))
+* Fix `initial` flag ([#13](https://github.com/rollup/rollup-watch/pull/13))
+* Retain options object ([#24](https://github.com/rollup/rollup-watch/issues/24))
+* Don't watch generated bundle ([#15](https://github.com/rollup/rollup-watch/issues/15))
+
 ## 2.5.0
 
 * Use `cache` ([#8](https://github.com/rollup/rollup-watch/issues/8))
