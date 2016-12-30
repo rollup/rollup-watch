@@ -78,10 +78,16 @@ export default function watch ( rollup, options ) {
 				cache = bundle;
 
 				bundle.modules.forEach( module => {
-					const id = module.id;
+					let id = module.id;
 
 					// skip plugin helper modules
 					if ( /\0/.test( id ) ) return;
+
+					try {
+						id = fs.realpathSync( id );
+					} catch ( err ) {
+						return;
+					}
 
 					if ( ~dests.indexOf( id ) ) {
 						throw new Error( 'Cannot import the generated bundle' );
