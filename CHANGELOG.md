@@ -1,5 +1,10 @@
 # rollup-watch changelog
 
+## 3.1.0
+
+* Add `watcher.close()` method
+* Resolve symlinks before watching ([#32](https://github.com/rollup/rollup-watch/issues/32))
+
 ## 3.0.0
 
 * Don't check for version updates ([#12](https://github.com/rollup/rollup-watch/issues/12), [#26](https://github.com/rollup/rollup-watch/issues/26), [#34](https://github.com/rollup/rollup-watch/issues/34))
