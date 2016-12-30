@@ -1,4 +1,5 @@
 import EventEmitter from 'events';
+import * as path from 'path';
 import * as fs from 'fs';
 import { sequence } from './utils/promise.js';
 
@@ -38,6 +39,7 @@ class FileWatcher {
 export default function watch ( rollup, options ) {
 	const emitter = new EventEmitter();
 
+	const dests = options.dest ? [ path.resolve( options.dest ) ] : options.target.map( target => path.resolve( target.dest ) );
 	let filewatchers = new Map();
 
 	let rebuildScheduled = false;
@@ -80,6 +82,10 @@ export default function watch ( rollup, options ) {
 
 					// skip plugin helper modules
 					if ( /\0/.test( id ) ) return;
+
+					if ( ~dests.indexOf( id ) ) {
+						throw new Error( 'Cannot import the generated bundle' );
+					}
 
 					if ( !filewatchers.has( id ) ) {
 						const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
