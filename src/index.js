@@ -120,7 +120,8 @@ export default function watch ( rollup, options ) {
 			});
 	}
 
-	build();
+	// build on next tick, so consumers can listen for BUILD_START
+	process.nextTick( build );
 
 	return emitter;
 }

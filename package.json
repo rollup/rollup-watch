@@ -5,7 +5,9 @@
   "main": "dist/rollup-watch.cjs.js",
   "jsnext:main": "dist/rollup-watch.es.js",
   "files": [
-    "src", "dist", "README.md"
+    "src",
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "test": "mocha",
@@ -31,9 +33,7 @@
     "mocha": "^3.2.0",
     "rollup": "^0.39.0",
     "rollup-plugin-buble": "^0.15.0",
-    "rollup-plugin-json": "^2.0.0"
-  },
-  "dependencies": {
-    "semver": "^5.1.0"
+    "rollup-plugin-json": "^2.0.0",
+    "sander": "^0.6.0"
   }
 }
