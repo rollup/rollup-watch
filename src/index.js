@@ -8,9 +8,9 @@ const opts = { encoding: 'utf-8', persistent: true };
 class FileWatcher {
 	constructor ( file, data, callback, dispose ) {
 		try {
-			const fsWatcher = fs.watch( file, opts, event => {
+			this.fsWatcher = fs.watch( file, opts, event => {
 				if ( event === 'rename' ) {
-					fsWatcher.close();
+					this.fsWatcher.close();
 					dispose();
 					callback();
 				} else {
@@ -34,10 +34,14 @@ class FileWatcher {
 			}
 		}
 	}
+
+	close () {
+		this.fsWatcher.close();
+	}
 }
 
 export default function watch ( rollup, options ) {
-	const emitter = new EventEmitter();
+	const watcher = new EventEmitter();
 
 	const dests = options.dest ? [ path.resolve( options.dest ) ] : options.target.map( target => path.resolve( target.dest ) );
 	let filewatchers = new Map();
@@ -45,6 +49,7 @@ export default function watch ( rollup, options ) {
 	let rebuildScheduled = false;
 	let building = false;
 	let watching = false;
+	let closed = false;
 
 	let timeout;
 	let cache;
@@ -62,13 +67,13 @@ export default function watch ( rollup, options ) {
 	}
 
 	function build () {
-		if ( building ) return;
+		if ( building || closed ) return;
 
 		let start = Date.now();
 		let initial = !watching;
 		if ( cache ) options.cache = cache;
 
-		emitter.emit( 'event', { code: 'BUILD_START' });
+		watcher.emit( 'event', { code: 'BUILD_START' });
 
 		building = true;
 
@@ -77,30 +82,32 @@ export default function watch ( rollup, options ) {
 				// Save off bundle for re-use later
 				cache = bundle;
 
-				bundle.modules.forEach( module => {
-					let id = module.id;
+				if ( !closed ) {
+					bundle.modules.forEach( module => {
+						let id = module.id;
 
-					// skip plugin helper modules
-					if ( /\0/.test( id ) ) return;
+						// skip plugin helper modules
+						if ( /\0/.test( id ) ) return;
 
-					try {
-						id = fs.realpathSync( id );
-					} catch ( err ) {
-						return;
-					}
+						try {
+							id = fs.realpathSync( id );
+						} catch ( err ) {
+							return;
+						}
 
-					if ( ~dests.indexOf( id ) ) {
-						throw new Error( 'Cannot import the generated bundle' );
-					}
+						if ( ~dests.indexOf( id ) ) {
+							throw new Error( 'Cannot import the generated bundle' );
+						}
 
-					if ( !filewatchers.has( id ) ) {
-						const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
-							filewatchers.delete( id );
-						});
+						if ( !filewatchers.has( id ) ) {
+							const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
+								filewatchers.delete( id );
+							});
 
-						if ( watcher.fileExists ) filewatchers.set( id, watcher );
-					}
-				});
+							if ( watcher.fileExists ) filewatchers.set( id, watcher );
+						}
+					});
+				}
 
 				// Now we're watching
 				watching = true;
@@ -115,25 +122,32 @@ export default function watch ( rollup, options ) {
 				return bundle.write( options );
 			})
 			.then( () => {
-				emitter.emit( 'event', {
+				watcher.emit( 'event', {
 					code: 'BUILD_END',
 					duration: Date.now() - start,
 					initial
 				});
 			}, error => {
-				emitter.emit( 'event', {
+				watcher.emit( 'event', {
 					code: 'ERROR',
 					error
 				});
 			})
 			.then( () => {
 				building = false;
-				if ( rebuildScheduled ) build();
+				if ( rebuildScheduled && !closed ) build();
 			});
 	}
 
 	// build on next tick, so consumers can listen for BUILD_START
 	process.nextTick( build );
 
-	return emitter;
+	watcher.close = () => {
+		for ( const fw of filewatchers.values() ) {
+			fw.close();
+		}
+		closed = true;
+	};
+
+	return watcher;
 }

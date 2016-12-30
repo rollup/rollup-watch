@@ -59,6 +59,7 @@ describe( 'rollup-watch', () => {
 				'BUILD_END',
 				() => {
 					assert.equal( run( './_tmp/output/bundle.js' ), 43 );
+					watcher.close();
 				}
 			]);
 		});
@@ -88,6 +89,7 @@ describe( 'rollup-watch', () => {
 				'BUILD_END',
 				() => {
 					assert.equal( run( './_tmp/output/bundle.js' ), 43 );
+					watcher.close();
 				}
 			]);
 		});
@@ -118,6 +120,7 @@ describe( 'rollup-watch', () => {
 				'BUILD_END',
 				() => {
 					assert.equal( run( './_tmp/output/bundle.js' ), 43 );
+					watcher.close();
 				}
 			]);
 		});
