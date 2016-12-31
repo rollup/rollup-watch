@@ -43,7 +43,7 @@ class FileWatcher {
 export default function watch ( rollup, options ) {
 	const watcher = new EventEmitter();
 
-	const dests = options.dest ? [ path.resolve( options.dest ) ] : options.target.map( target => path.resolve( target.dest ) );
+	const dests = options.dest ? [ path.resolve( options.dest ) ] : options.targets.map( target => path.resolve( target.dest ) );
 	let filewatchers = new Map();
 
 	let rebuildScheduled = false;
