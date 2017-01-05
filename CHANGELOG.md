@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 3.2.1
+
+* Fix missing `require-relative`
+
 ## 3.2.0
 
 * `options.targets`, not `options.target` ([#36](https://github.com/rollup/rollup-watch/issues/36))
