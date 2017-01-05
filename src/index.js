@@ -1,27 +1,41 @@
 import EventEmitter from 'events';
+import relative from 'require-relative';
 import * as path from 'path';
 import * as fs from 'fs';
 import { sequence } from './utils/promise.js';
 
 const opts = { encoding: 'utf-8', persistent: true };
 
+let chokidar;
+
+try {
+	chokidar = relative( 'chokidar', process.cwd() );
+} catch (err) {
+	chokidar = null;
+}
+
 class FileWatcher {
 	constructor ( file, data, callback, dispose ) {
-		try {
-			this.fsWatcher = fs.watch( file, opts, event => {
-				if ( event === 'rename' ) {
-					this.fsWatcher.close();
-					dispose();
+		const handleWatchEvent = event => {
+			if ( event === 'rename' || event === 'unlink' ) {
+				this.fsWatcher.close();
+				dispose();
+				callback();
+			} else {
+				// this is necessary because we get duplicate events...
+				const contents = fs.readFileSync( file, 'utf-8' );
+				if ( contents !== data ) {
+					data = contents;
 					callback();
-				} else {
-					// this is necessary because we get duplicate events...
-					const contents = fs.readFileSync( file, 'utf-8' );
-					if ( contents !== data ) {
-						data = contents;
-						callback();
-					}
 				}
-			});
+			}
+		};
+
+		try {
+			if (chokidar)
+				this.fsWatcher = chokidar.watch(file, { ignoreInitial: true }).on('all', handleWatchEvent);
+			else
+				this.fsWatcher = fs.watch( file, opts, handleWatchEvent);
 
 			this.fileExists = true;
 		} catch ( err ) {
