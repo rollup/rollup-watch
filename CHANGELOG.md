@@ -1,5 +1,10 @@
 # rollup-watch changelog
 
+## 3.2.0
+
+* `options.targets`, not `options.target` ([#36](https://github.com/rollup/rollup-watch/issues/36))
+* Use chokidar if available ([#39](https://github.com/rollup/rollup-watch/pull/39))
+
 ## 3.1.0
 
 * Add `watcher.close()` method
