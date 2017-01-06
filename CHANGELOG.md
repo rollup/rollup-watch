@@ -1,8 +1,13 @@
 # rollup-watch changelog
 
+## 3.2.2
+
+* Fix missing `require-relative` ([#41](https://github.com/rollup/rollup-watch/pull/41))
+* Prevent infinite build loops
+
 ## 3.2.1
 
-* Fix missing `require-relative`
+* Published mistakenly
 
 ## 3.2.0
 

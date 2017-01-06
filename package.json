@@ -1,6 +1,6 @@
 {
   "name": "rollup-watch",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Watch files for changes and perform incremental rebuilds with Rollup",
   "main": "dist/rollup-watch.cjs.js",
   "jsnext:main": "dist/rollup-watch.es.js",
