@@ -73,15 +73,14 @@ export default function watch ( rollup, options ) {
 		rebuildScheduled = true;
 
 		timeout = setTimeout( () => {
-			if ( !building ) {
-				rebuildScheduled = false;
-				build();
-			}
+			if ( !building ) build();
 		}, 50 );
 	}
 
 	function build () {
 		if ( building || closed ) return;
+
+		rebuildScheduled = false;
 
 		let start = Date.now();
 		let initial = !watching;
