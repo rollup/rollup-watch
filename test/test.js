@@ -32,7 +32,10 @@ describe( 'rollup-watch', () => {
 				}
 
 				else {
-					Promise.resolve( next( event ) ).then( go );
+					Promise.resolve()
+						.then( () => next( event ) )
+						.then( go )
+						.catch( reject );
 				}
 			}
 
