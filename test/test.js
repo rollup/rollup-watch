@@ -98,6 +98,38 @@ describe( 'rollup-watch', () => {
 		});
 	});
 
+	it( 'recovers from an error even when erroring file was "renamed" (#38)', () => {
+		return sander.copydir( 'test/samples/basic' ).to( 'test/_tmp/input' ).then( () => {
+			const watcher = watch( rollup, {
+				entry: 'test/_tmp/input/main.js',
+				dest: 'test/_tmp/output/bundle.js',
+				format: 'cjs'
+			});
+
+			return sequence( watcher, [
+				'BUILD_START',
+				'BUILD_END',
+				() => {
+					assert.equal( run( './_tmp/output/bundle.js' ), 42 );
+					sander.unlinkSync( 'test/_tmp/input/main.js' );
+					sander.writeFileSync( 'test/_tmp/input/main.js', 'export nope;' );
+				},
+				'BUILD_START',
+				'ERROR',
+				() => {
+					sander.unlinkSync( 'test/_tmp/input/main.js' );
+					sander.writeFileSync( 'test/_tmp/input/main.js', 'export default 43;' );
+				},
+				'BUILD_START',
+				'BUILD_END',
+				() => {
+					assert.equal( run( './_tmp/output/bundle.js' ), 43 );
+					watcher.close();
+				}
+			]);
+		});
+	});
+
 	it( 'refuses to watch the output file (#15)', () => {
 		return sander.copydir( 'test/samples/basic' ).to( 'test/_tmp/input' ).then( () => {
 			const watcher = watch( rollup, {

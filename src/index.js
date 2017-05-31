@@ -77,6 +77,33 @@ export default function watch ( rollup, options ) {
 		}, 50 );
 	}
 
+	function addFileWatchersForModules ( modules ) {
+		modules.forEach( module => {
+			let id = module.id;
+
+			// skip plugin helper modules
+			if ( /\0/.test( id ) ) return;
+
+			try {
+				id = fs.realpathSync( id );
+			} catch ( err ) {
+				return;
+			}
+
+			if ( ~dests.indexOf( id ) ) {
+				throw new Error( 'Cannot import the generated bundle' );
+			}
+
+			if ( !filewatchers.has( id ) ) {
+				const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
+					filewatchers.delete( id );
+				});
+
+				if ( watcher.fileExists ) filewatchers.set( id, watcher );
+			}
+		});
+	}
+
 	function build () {
 		if ( building || closed ) return;
 
@@ -96,30 +123,7 @@ export default function watch ( rollup, options ) {
 				cache = bundle;
 
 				if ( !closed ) {
-					bundle.modules.forEach( module => {
-						let id = module.id;
-
-						// skip plugin helper modules
-						if ( /\0/.test( id ) ) return;
-
-						try {
-							id = fs.realpathSync( id );
-						} catch ( err ) {
-							return;
-						}
-
-						if ( ~dests.indexOf( id ) ) {
-							throw new Error( 'Cannot import the generated bundle' );
-						}
-
-						if ( !filewatchers.has( id ) ) {
-							const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
-								filewatchers.delete( id );
-							});
-
-							if ( watcher.fileExists ) filewatchers.set( id, watcher );
-						}
-					});
+					addFileWatchersForModules(bundle.modules);
 				}
 
 				// Now we're watching
@@ -141,6 +145,13 @@ export default function watch ( rollup, options ) {
 					initial
 				});
 			}, error => {
+				try {
+					//If build failed, make sure we are still watching those files from the most recent successful build.
+					addFileWatchersForModules( cache.modules );
+				}
+				catch (e) {
+					//Ignore if they tried to import the output. We are already inside of a catch (probably caused by that).
+				}
 				watcher.emit( 'event', {
 					code: 'ERROR',
 					error
