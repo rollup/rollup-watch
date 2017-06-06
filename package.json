@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/rollup/rollup-watch#readme",
   "dependencies": {
+    "chokidar": "^1.7.0",
     "require-relative": "0.8.7"
   },
   "devDependencies": {

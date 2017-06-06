@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import relative from 'require-relative';
-import * as path from 'path';
+import path from 'path';
 import * as fs from 'fs';
 import { sequence } from './utils/promise.js';
 
@@ -15,8 +15,8 @@ try {
 }
 
 class FileWatcher {
-	constructor ( file, data, callback, dispose ) {
-		const handleWatchEvent = event => {
+	constructor ( file, data, callback, useChokidar, dispose ) {
+		const handleWatchEvent = (event, filename) => {
 			if ( event === 'rename' || event === 'unlink' ) {
 				this.fsWatcher.close();
 				dispose();
@@ -32,7 +32,7 @@ class FileWatcher {
 		};
 
 		try {
-			if (chokidar)
+			if (useChokidar)
 				this.fsWatcher = chokidar.watch(file, { ignoreInitial: true }).on('all', handleWatchEvent);
 			else
 				this.fsWatcher = fs.watch( file, opts, handleWatchEvent);
@@ -55,6 +55,13 @@ class FileWatcher {
 }
 
 export default function watch ( rollup, options ) {
+	const watchOptions = options.watch || {};
+	const useChokidar = 'useChokidar' in watchOptions ? watchOptions.useChokidar : !!chokidar;
+
+	if ( useChokidar && !chokidar ) {
+		throw new Error( `options.watch.useChokidar is true, but chokidar could not be found. Have you installed it?` );
+	}
+
 	const watcher = new EventEmitter();
 
 	const dests = options.dest ? [ path.resolve( options.dest ) ] : options.targets.map( target => path.resolve( target.dest ) );
@@ -95,7 +102,7 @@ export default function watch ( rollup, options ) {
 			}
 
 			if ( !filewatchers.has( id ) ) {
-				const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, () => {
+				const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, useChokidar, () => {
 					filewatchers.delete( id );
 				});
 
