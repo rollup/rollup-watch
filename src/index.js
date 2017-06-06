@@ -16,7 +16,7 @@ try {
 
 class FileWatcher {
 	constructor ( file, data, callback, useChokidar, dispose ) {
-		const handleWatchEvent = (event, filename) => {
+		const handleWatchEvent = (event) => {
 			if ( event === 'rename' || event === 'unlink' ) {
 				this.fsWatcher.close();
 				dispose();
