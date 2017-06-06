@@ -3,7 +3,7 @@ const sander = require( 'sander' );
 const rollup = require( 'rollup' );
 const watch = require( '..' );
 
-function wait ( ms = 100 ) {
+function wait ( ms ) {
 	return new Promise( fulfil => {
 		setTimeout( fulfil, ms );
 	});
