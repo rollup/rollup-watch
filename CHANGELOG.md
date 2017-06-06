@@ -1,5 +1,11 @@
 # rollup-watch changelog
 
+## 4.0.0
+
+* On error, watch files from last successful build ([#38](https://github.com/rollup/rollup-watch/issues/38))
+* Fix bug preventing `chokidar` from ever working ([#45](https://github.com/rollup/rollup-watch/issues/45))
+* Add `options.watch.useChokidar` option
+
 ## 3.2.2
 
 * Fix missing `require-relative` ([#41](https://github.com/rollup/rollup-watch/pull/41))
