@@ -42,7 +42,7 @@ describe( 'rollup-watch', () => {
 
 				else {
 					Promise.resolve()
-						.then( () => wait( 100 ) ) // gah, this appears to be necessary to fix random errors
+						.then( () => wait( 500 ) ) // gah, this appears to be necessary to fix random errors
 						.then( () => next( event ) )
 						.then( go )
 						.catch( reject );
