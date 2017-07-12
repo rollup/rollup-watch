@@ -1,5 +1,10 @@
 # rollup-watch changelog
 
+## 4.1.0
+
+* Rename `options.watch.useChokidar` to `options.watch.chokidar` ([#52](https://github.com/rollup/rollup-watch/pull/52))
+* Allow passing chokidar options via `options.watch.chokidar` (i.e. can be `true` or `{...}`)  ([#52](https://github.com/rollup/rollup-watch/pull/52))
+
 ## 4.0.0
 
 * On error, watch files from last successful build ([#38](https://github.com/rollup/rollup-watch/issues/38))
