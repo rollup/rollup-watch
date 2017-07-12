@@ -189,6 +189,13 @@ export default function watch ( rollup, options ) {
 		for ( const fw of filewatchers.values() ) {
 			fw.close();
 		}
+
+		process.removeListener('SIGINT', close);
+		process.removeListener('SIGTERM', close);
+		process.removeListener('uncaughtException', close);
+		process.stdin.removeListener('end', close);
+
+		watcher.removeAllListeners();
 		closed = true;
 	}
 
@@ -200,11 +207,11 @@ export default function watch ( rollup, options ) {
 	// killall node
 	process.on('SIGTERM', close);
 
-	// in case we ever support stdin!
-	process.stdin.on('end', close);
-
 	// on error
 	process.on('uncaughtException', close);
+
+	// in case we ever support stdin!
+	process.stdin.on('end', close);
 
 	return watcher;
 }
