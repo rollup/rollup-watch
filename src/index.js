@@ -2,6 +2,7 @@ import EventEmitter from 'events';
 import relative from 'require-relative';
 import path from 'path';
 import * as fs from 'fs';
+import createFilter from 'rollup-pluginutils/src/createFilter.js';
 import sequence from './utils/sequence.js';
 
 const opts = { encoding: 'utf-8', persistent: true };
@@ -72,6 +73,7 @@ export default function watch ( rollup, options ) {
 
 	const watcher = new EventEmitter();
 
+	const filter = createFilter( watchOptions.include, watchOptions.exclude );
 	const dests = options.dest ? [ path.resolve( options.dest ) ] : options.targets.map( target => path.resolve( target.dest ) );
 	let filewatchers = new Map();
 
@@ -96,8 +98,9 @@ export default function watch ( rollup, options ) {
 		modules.forEach( module => {
 			let id = module.id;
 
-			// skip plugin helper modules
+			// skip plugin helper modules and unwatched files
 			if ( /\0/.test( id ) ) return;
+			if ( !filter( id ) ) return;
 
 			try {
 				id = fs.realpathSync( id );
