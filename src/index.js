@@ -68,7 +68,7 @@ export default function watch ( rollup, options ) {
 	}
 
 	if ( chokidarOptions && !chokidar ) {
-		throw new Error( `options.watch.useChokidar is true, but chokidar could not be found. Have you installed it?` );
+		throw new Error( `options.watch.chokidar was provided, but chokidar could not be found. Have you installed it?` );
 	}
 
 	const watcher = new EventEmitter();
