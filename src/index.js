@@ -2,7 +2,7 @@ import EventEmitter from 'events';
 import relative from 'require-relative';
 import path from 'path';
 import * as fs from 'fs';
-import { sequence } from './utils/promise.js';
+import sequence from './utils/sequence.js';
 
 const opts = { encoding: 'utf-8', persistent: true };
 

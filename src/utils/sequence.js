@@ -1,4 +1,4 @@
-export function sequence ( array, fn ) {
+export default function sequence ( array, fn ) {
 	let results = [];
 	let promise = Promise.resolve();
 
