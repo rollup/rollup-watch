@@ -32,10 +32,15 @@ class FileWatcher {
 		};
 
 		try {
-			if (useChokidar)
-				this.fsWatcher = chokidar.watch(file, { ignoreInitial: true }).on('all', handleWatchEvent);
-			else
+			if (useChokidar) {
+				const chokidarOptions = Object.assign(
+					typeof useChokidar === 'object' ? useChokidar : {},
+					{ ignoreInitial: true }
+				);
+				this.fsWatcher = chokidar.watch(file, chokidarOptions).on('all', handleWatchEvent);
+			} else {
 				this.fsWatcher = fs.watch( file, opts, handleWatchEvent);
+			}
 
 			this.fileExists = true;
 		} catch ( err ) {
