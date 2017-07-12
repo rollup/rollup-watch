@@ -181,12 +181,24 @@ export default function watch ( rollup, options ) {
 	// build on next tick, so consumers can listen for BUILD_START
 	process.nextTick( build );
 
-	watcher.close = () => {
+	function close () {
+		if ( closed ) return;
 		for ( const fw of filewatchers.values() ) {
 			fw.close();
 		}
 		closed = true;
-	};
+	}
+
+	watcher.close = close;
+
+	// ctrl-c
+	process.on('SIGINT', close);
+
+	// killall node
+	process.on('SIGTERM', close);
+
+	// on error
+	process.on('uncaughtException', close);
 
 	return watcher;
 }
