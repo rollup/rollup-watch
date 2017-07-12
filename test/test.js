@@ -63,14 +63,14 @@ describe( 'rollup-watch', () => {
 		});
 	}
 
-	function runTests ( useChokidar ) {
+	function runTests ( chokidar ) {
 		it( 'watches a file', () => {
 			return sander.copydir( 'test/samples/basic' ).to( 'test/_tmp/input' ).then( () => {
 				const watcher = watch( rollup, {
 					entry: 'test/_tmp/input/main.js',
 					dest: 'test/_tmp/output/bundle.js',
 					format: 'cjs',
-					watch: { useChokidar }
+					watch: { chokidar }
 				});
 
 				return sequence( watcher, [
@@ -96,7 +96,7 @@ describe( 'rollup-watch', () => {
 					entry: 'test/_tmp/input/main.js',
 					dest: 'test/_tmp/output/bundle.js',
 					format: 'cjs',
-					watch: { useChokidar }
+					watch: { chokidar }
 				});
 
 				return sequence( watcher, [
@@ -127,7 +127,7 @@ describe( 'rollup-watch', () => {
 					entry: 'test/_tmp/input/main.js',
 					dest: 'test/_tmp/output/bundle.js',
 					format: 'cjs',
-					watch: { useChokidar }
+					watch: { chokidar }
 				});
 
 				return sequence( watcher, [
@@ -160,7 +160,7 @@ describe( 'rollup-watch', () => {
 					entry: 'test/_tmp/input/main.js',
 					dest: 'test/_tmp/output/bundle.js',
 					format: 'cjs',
-					watch: { useChokidar }
+					watch: { chokidar }
 				});
 
 				return sequence( watcher, [

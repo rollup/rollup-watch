@@ -15,7 +15,7 @@ try {
 }
 
 class FileWatcher {
-	constructor ( file, data, callback, useChokidar, dispose ) {
+	constructor ( file, data, callback, chokidarOptions, dispose ) {
 		const handleWatchEvent = (event) => {
 			if ( event === 'rename' || event === 'unlink' ) {
 				this.fsWatcher.close();
@@ -32,11 +32,7 @@ class FileWatcher {
 		};
 
 		try {
-			if (useChokidar) {
-				const chokidarOptions = Object.assign(
-					typeof useChokidar === 'object' ? useChokidar : {},
-					{ ignoreInitial: true }
-				);
+			if (chokidarOptions) {
 				this.fsWatcher = chokidar.watch(file, chokidarOptions).on('all', handleWatchEvent);
 			} else {
 				this.fsWatcher = fs.watch( file, opts, handleWatchEvent);
@@ -61,9 +57,16 @@ class FileWatcher {
 
 export default function watch ( rollup, options ) {
 	const watchOptions = options.watch || {};
-	const useChokidar = 'useChokidar' in watchOptions ? watchOptions.useChokidar : !!chokidar;
 
-	if ( useChokidar && !chokidar ) {
+	if ( 'useChokidar' in watchOptions ) watchOptions.chokidar = watchOptions.useChokidar;
+	let chokidarOptions = 'chokidar' in watchOptions ? watchOptions.chokidar : !!chokidar;
+	if ( chokidarOptions ) {
+		chokidarOptions = Object.assign( chokidarOptions === true ? {} : chokidarOptions, {
+			ignoreInitial: true
+		});
+	}
+
+	if ( chokidarOptions && !chokidar ) {
 		throw new Error( `options.watch.useChokidar is true, but chokidar could not be found. Have you installed it?` );
 	}
 
@@ -107,7 +110,7 @@ export default function watch ( rollup, options ) {
 			}
 
 			if ( !filewatchers.has( id ) ) {
-				const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, useChokidar, () => {
+				const watcher = new FileWatcher( id, module.originalCode, triggerRebuild, chokidarOptions, () => {
 					filewatchers.delete( id );
 				});
 
