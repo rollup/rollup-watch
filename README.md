@@ -47,3 +47,8 @@ export default {
   }
 };
 ```
+
+
+## LICENSE
+
+[MIT](LICENSE)
