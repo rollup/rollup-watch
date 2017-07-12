@@ -197,6 +197,9 @@ export default function watch ( rollup, options ) {
 	// killall node
 	process.on('SIGTERM', close);
 
+	// in case we ever support stdin!
+	process.stdin.on('end', close);
+
 	// on error
 	process.on('uncaughtException', close);
 
