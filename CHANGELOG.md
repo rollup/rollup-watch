@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 4.3.1
+
+* Clean up listeners on close
+
 ## 4.3.0
 
 * Stop watching when process is killed ([#30](https://github.com/rollup/rollup-watch/issues/30))
