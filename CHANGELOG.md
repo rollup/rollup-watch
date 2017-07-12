@@ -1,5 +1,9 @@
 # rollup-watch changelog
 
+## 4.2.0
+
+* Support `include` and `exclude` options ([#22](https://github.com/rollup/rollup-watch/issues/22))
+
 ## 4.1.0
 
 * Rename `options.watch.useChokidar` to `options.watch.chokidar` ([#52](https://github.com/rollup/rollup-watch/pull/52))
