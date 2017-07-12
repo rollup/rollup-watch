@@ -185,5 +185,71 @@ describe( 'rollup-watch', () => {
 				]);
 			});
 		});
+		
+		it( 'ignores files that are not specified in options.watch.include, if given', () => {
+			return sander.copydir( 'test/samples/ignored' ).to( 'test/_tmp/input' ).then( () => {
+				const watcher = watch( rollup, {
+					entry: 'test/_tmp/input/main.js',
+					dest: 'test/_tmp/output/bundle.js',
+					format: 'cjs',
+					watch: {
+						chokidar,
+						include: ['test/_tmp/input/+(main|foo).js']
+					}
+				});
+
+				return sequence( watcher, [
+					'BUILD_START',
+					'BUILD_END',
+					() => {
+						assert.deepEqual( run( './_tmp/output/bundle.js' ), { foo: 'foo-1', bar: 'bar-1' });
+						sander.writeFileSync( 'test/_tmp/input/foo.js', `export default 'foo-2';` );
+					},
+					'BUILD_START',
+					'BUILD_END',
+					() => {
+						assert.deepEqual( run( './_tmp/output/bundle.js' ), { foo: 'foo-2', bar: 'bar-1' });
+						sander.writeFileSync( 'test/_tmp/input/bar.js', `export default 'bar-2';` );
+					},
+					() => {
+						assert.deepEqual( run( './_tmp/output/bundle.js' ), { foo: 'foo-2', bar: 'bar-1' });
+						watcher.close();
+					}
+				]);
+			});
+		});
+		
+		it( 'ignores files that are specified in options.watch.exclude, if given', () => {
+			return sander.copydir( 'test/samples/ignored' ).to( 'test/_tmp/input' ).then( () => {
+				const watcher = watch( rollup, {
+					entry: 'test/_tmp/input/main.js',
+					dest: 'test/_tmp/output/bundle.js',
+					format: 'cjs',
+					watch: {
+						chokidar,
+						exclude: ['test/_tmp/input/bar.js']
+					}
+				});
+
+				return sequence( watcher, [
+					'BUILD_START',
+					'BUILD_END',
+					() => {
+						assert.deepEqual( run( './_tmp/output/bundle.js' ), { foo: 'foo-1', bar: 'bar-1' });
+						sander.writeFileSync( 'test/_tmp/input/foo.js', `export default 'foo-2';` );
+					},
+					'BUILD_START',
+					'BUILD_END',
+					() => {
+						assert.deepEqual( run( './_tmp/output/bundle.js' ), { foo: 'foo-2', bar: 'bar-1' });
+						sander.writeFileSync( 'test/_tmp/input/bar.js', `export default 'bar-2';` );
+					},
+					() => {
+						assert.deepEqual( run( './_tmp/output/bundle.js' ), { foo: 'foo-2', bar: 'bar-1' });
+						watcher.close();
+					}
+				]);
+			});
+		});
 	}
 });

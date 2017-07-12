@@ -30,7 +30,8 @@
   "homepage": "https://github.com/rollup/rollup-watch#readme",
   "dependencies": {
     "chokidar": "^1.7.0",
-    "require-relative": "0.8.7"
+    "require-relative": "0.8.7",
+    "rollup-pluginutils": "^2.0.1"
   },
   "devDependencies": {
     "eslint": "^3.12.2",
