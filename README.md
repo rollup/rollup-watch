@@ -1,3 +1,7 @@
+# This package is now deprecated — Rollup exports a `watch` method as of 0.46
+
+---
+
 # rollup-watch
 
 This module is used by the [Rollup](https://rollupjs.org) command line interface to enable automatic incremental rebuilds.
